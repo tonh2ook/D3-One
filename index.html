@@ -6,6 +6,12 @@
 <title>D3-One · PMU-B</title>
 <meta name="theme-color" content="#141c3a">
 <meta name="robots" content="noindex, nofollow">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" type="image/svg+xml" href="favicon.svg">
+<link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png">
+<link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png">
+<meta name="apple-mobile-web-app-title" content="D3-One">
+<meta name="apple-mobile-web-app-capable" content="yes">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Thai:wght@400;500;600;700&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -144,7 +150,7 @@ a.app:hover{transform:translateY(-3px);box-shadow:0 2px 4px rgba(20,30,60,.06),0
    D3-One — single sign-on launcher for the D3 team's PMU-B apps
    ทุกระบบอยู่ใต้โดเมน tonh2ook.github.io เดียวกัน จึงใช้ localStorage ร่วมกันได้
    ===================================================================== */
-var VERSION = 'D3-One V1.0.0';
+var VERSION = 'D3-One V1.1.0';
 var ACCESS_CODES = ['global'];                 // รหัสผู้ชม
 var EDIT_LOCK = {"s": "804caa2920984d9e636fa9a677738111", "c": "4b7fb8d09f88d4e155b9b9c47c6c8f10bfaa8388db5ac443a5660d156c046f8faeed43f4df8a147d"};                  // token เข้ารหัสด้วยรหัสผู้แก้ไข
 var SESSION_HOURS = 12;
@@ -274,6 +280,7 @@ function showHome(){ $('#login').classList.add('hidden'); $('#home').classList.r
   $$('#login [data-lang]').forEach(function(g){g.classList.add('lt')});
   setLang(get('d3one:lang')||get('peb_lang')||'th');
   if(auth()) showHome(); else setTimeout(function(){$('#code').focus()},60);
+  if('serviceWorker' in navigator && location.protocol==='https:') navigator.serviceWorker.register('sw.js').catch(function(){});
   window.addEventListener('pageshow',function(){ if(!auth()&&!$('#home').classList.contains('hidden')) location.reload(); else if(auth()) renderHome(); });
 })();
 </script>
