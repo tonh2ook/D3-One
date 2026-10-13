@@ -153,15 +153,15 @@ a.app:hover{transform:translateY(-3px);box-shadow:0 2px 4px rgba(20,30,60,.06),0
    D3-One — single sign-on launcher for the D3 team's PMU-B apps
    ทุกระบบอยู่ใต้โดเมน tonh2ook.github.io เดียวกัน จึงใช้ localStorage ร่วมกันได้
    ===================================================================== */
-var VERSION = 'D3-One V1.2.0';
+var VERSION = 'D3-One V1.2.1';
 // กลุ่มผู้ใช้ — รหัสของแต่ละกลุ่มใช้ปลดล็อก GitHub token ที่เข้ารหัสไว้ (ไม่มีรหัสหรือ token แบบข้อความธรรมดาในไฟล์)
-//   ผู้ชมทั่วไป (ผู้บริหาร/ทีมอื่นๆ) = pmub      → ผู้ทรงฯ + นามบัตร
+//   ผู้ชมทั่วไป (ผู้บริหาร/ทีมอื่นๆ) = pmub      → ผู้ทรงฯ + นามบัตร + ระบบ ผอ. (ดูอย่างเดียว)
 //   ฝ่ายเลขาฯ                     = secretary → ระบบ ผอ.
 //   ทีม D3 และผู้ดูแลระบบ          = admin00   → ทุกระบบ
 // เปลี่ยนรหัส → ต้องสร้างค่า lock ใหม่
 var LOCKS = {"public": {"s": "9fccec0515421f9ff1318604918aef74", "c": "89230c0fd6e6e67f347211cac129a9ae470e98637838734e24f06426e527b0f406c0dbf07ad82a2a"}, "secretary": {"s": "7298789222653cfb409cbc732607f43a", "c": "e28580c557905021b8ddcd61ad5a0d752730ffa80760e70acc49f019f28572731c436a51bc3f1277"}, "admin": {"s": "43fac685b5d1aab7ac7d7b6690b1ebee", "c": "e228742d412f6b7d3cbb3655bbb2844fb64ea44d01edf08232f24668819309e804e3409da7db18c8"}};
 var GROUPS = [
- {id:'public',    name:['ผู้ชมทั่วไป (ผู้บริหาร/ทีมอื่นๆ)','General viewer (executives / other teams)'], apps:['expert','meeting']},
+ {id:'public',    name:['ผู้ชมทั่วไป (ผู้บริหาร/ทีมอื่นๆ)','General viewer (executives / other teams)'], apps:['director','expert','meeting'], readonly:['director']},
  {id:'secretary', name:['ฝ่ายเลขาฯ','Secretariat'], apps:['director']},
  {id:'admin',     name:['ทีม D3 และผู้ดูแลระบบ','D3 team & system admin'], apps:['director','expert','meeting']}
 ];
@@ -191,7 +191,7 @@ var I={
  signOut:['ออกจากระบบ','Sign out'], roleEdit:['ผู้แก้ไข','Editor'], roleView:['ผู้ชม','Viewer'],
  hiMorning:['สวัสดีตอนเช้า','Good morning'], hiAfternoon:['สวัสดีตอนบ่าย','Good afternoon'], hiEvening:['สวัสดีตอนเย็น','Good evening'],
  heroSub:['เลือกระบบที่ต้องการใช้งาน — เข้าสู่ระบบครั้งเดียว ไม่ต้องใส่รหัสซ้ำในแต่ละระบบ','Pick a system — sign in once, no code needed inside each system'],
- open:['เปิดระบบ','Open'], locked:['ไม่มีสิทธิ์เข้าใช้งาน','No access'], lockedHint:['ไม่อยู่ในสิทธิ์ของกลุ่มนี้','Not included for your group'],
+ open:['เปิดระบบ','Open'], viewOnly:['ดูอย่างเดียว','View only'], locked:['ไม่มีสิทธิ์เข้าใช้งาน','No access'], lockedHint:['ไม่อยู่ในสิทธิ์ของกลุ่มนี้','Not included for your group'],
  nextUp:['กิจกรรมถัดไป','Next up'], footNote:['ข้อมูลของแต่ละระบบเก็บแยกกันใน GitHub Gist ของระบบนั้น','Each system keeps its own data in its own GitHub Gist']
 };
 var LANG='th';
@@ -243,7 +243,7 @@ async function login(){
   for(var i=0;i<GROUPS.length;i++){ try{tk=await unlockToken(c,LOCKS[GROUPS[i].id])}catch(e){tk=null} if(tk){grp=GROUPS[i];break} }
   b.disabled=false; b.textContent=t('signIn');
   if(!tk){$('#err').textContent=t('wrong');$('#code').select();return}
-  put('d3one:tok',tk); put('d3one:auth',JSON.stringify({exp:exp,role:'edit',group:grp.id,groupName:grp.name,apps:grp.apps,at:Date.now()}));
+  put('d3one:tok',tk); put('d3one:auth',JSON.stringify({exp:exp,role:'edit',group:grp.id,groupName:grp.name,apps:grp.apps,readonly:grp.readonly||[],at:Date.now()}));
   showHome();
 }
 
@@ -272,7 +272,7 @@ function renderHome(){
     var inner='<div class="ic"><svg class="i" viewBox="0 0 24 24">'+a.icon+'</svg></div>'+
       '<h2>'+esc(a.name[L])+'<small>'+esc(a.sub[L])+'</small></h2>'+
       '<p>'+esc(a.desc[L])+'</p>'+(a.id==='director'?directorPeek():'')+
-      '<div class="go">'+(ok?'<span>'+t('open')+'</span><span>→</span>':'<span>🔒 '+t('locked')+'</span><span class="k">'+t('lockedHint')+'</span>')+'</div>';
+      '<div class="go">'+(ok?'<span>'+t('open')+((s.readonly||[]).indexOf(a.id)>-1?' <span class="k">· 👁 '+t('viewOnly')+'</span>':'')+'</span><span>→</span>':'<span>🔒 '+t('locked')+'</span><span class="k">'+t('lockedHint')+'</span>')+'</div>';
     var st='style="--c:'+a.c+';--cb:'+a.cb+'"';
     return ok?'<a class="app" '+st+' href="'+esc(a.url)+'" data-app="'+a.id+'">'+inner+'</a>':'<div class="app locked" '+st+'>'+inner+'</div>';
   }).join('');
