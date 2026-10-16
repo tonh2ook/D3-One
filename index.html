@@ -87,6 +87,8 @@ main{max-width:1120px;margin:-64px auto 0;padding:0 24px 60px}
 .app{position:relative;background:var(--panel);border:1px solid var(--line);border-radius:16px;box-shadow:0 1px 2px rgba(20,30,60,.05),0 10px 30px rgba(20,30,60,.08);padding:22px 22px 18px;display:flex;flex-direction:column;gap:12px;transition:transform .15s,box-shadow .15s;overflow:hidden}
 .app::before{content:"";position:absolute;inset:0 0 auto 0;height:4px;background:var(--c)}
 a.app:hover{transform:translateY(-3px);box-shadow:0 2px 4px rgba(20,30,60,.06),0 18px 40px rgba(20,30,60,.12)}
+.app .ver{position:absolute;top:16px;right:16px;font:600 11px var(--latin);color:var(--muted);background:#f3f5f9;border:1px solid var(--line);border-radius:999px;padding:2px 9px;letter-spacing:.02em}
+.app .ver:empty{display:none}
 .app .ic{width:48px;height:48px;border-radius:13px;display:grid;place-items:center;background:var(--cb);color:var(--c)}
 .app .ic svg.i{width:24px;height:24px}
 .app h2{margin:0;font-size:18px;line-height:1.3}
@@ -153,7 +155,7 @@ a.app:hover{transform:translateY(-3px);box-shadow:0 2px 4px rgba(20,30,60,.06),0
    D3-One — single sign-on launcher for the D3 team's PMU-B apps
    ทุกระบบอยู่ใต้โดเมน tonh2ook.github.io เดียวกัน จึงใช้ localStorage ร่วมกันได้
    ===================================================================== */
-var VERSION = 'D3-One V1.2.1';
+var VERSION = 'D3-One V1.3.0';
 // กลุ่มผู้ใช้ — รหัสของแต่ละกลุ่มใช้ปลดล็อก GitHub token ที่เข้ารหัสไว้ (ไม่มีรหัสหรือ token แบบข้อความธรรมดาในไฟล์)
 //   ผู้ชมทั่วไป (ผู้บริหาร/ทีมอื่นๆ) = pmub      → ผู้ทรงฯ + นามบัตร + ระบบ ผอ. (ดูอย่างเดียว)
 //   ฝ่ายเลขาฯ                     = secretary → ระบบ ผอ.
@@ -269,7 +271,7 @@ function renderHome(){
   $('#asGroup').textContent=(LANG==='en'?'Signed in as: ':'เข้าสู่ระบบในฐานะ: ')+((s.groupName||[])[LANG==='en'?1:0]||'');
   $('#grid').innerHTML=APPS.map(function(a){
     var ok=canOpen(a,s), L=LANG==='en'?1:0;
-    var inner='<div class="ic"><svg class="i" viewBox="0 0 24 24">'+a.icon+'</svg></div>'+
+    var inner='<span class="ver" data-ver="'+a.id+'">'+esc(VERS[a.id]||'')+'</span><div class="ic"><svg class="i" viewBox="0 0 24 24">'+a.icon+'</svg></div>'+
       '<h2>'+esc(a.name[L])+'<small>'+esc(a.sub[L])+'</small></h2>'+
       '<p>'+esc(a.desc[L])+'</p>'+(a.id==='director'?directorPeek():'')+
       '<div class="go">'+(ok?'<span>'+t('open')+((s.readonly||[]).indexOf(a.id)>-1?' <span class="k">· 👁 '+t('viewOnly')+'</span>':'')+'</span><span>→</span>':'<span>🔒 '+t('locked')+'</span><span class="k">'+t('lockedHint')+'</span>')+'</div>';
@@ -277,7 +279,20 @@ function renderHome(){
     return ok?'<a class="app" '+st+' href="'+esc(a.url)+'" data-app="'+a.id+'">'+inner+'</a>':'<div class="app locked" '+st+'>'+inner+'</div>';
   }).join('');
 }
-function showHome(){ $('#login').classList.add('hidden'); $('#home').classList.remove('hidden'); renderHome(); }
+function showHome(){ $('#login').classList.add('hidden'); $('#home').classList.remove('hidden'); renderHome(); loadVersions(); }
+/* ---------- เวอร์ชันของแต่ละระบบ (อ่านจากไฟล์ที่เผยแพร่อยู่จริง) ---------- */
+var VERS={}; try{VERS=JSON.parse(get('d3one:vers')||'{}')}catch(e){VERS={}}
+var VER_RE={director:/APP_VERSION\s*=\s*'([^']+)'/, expert:/APP_VERSION\s*=\s*'([^']+)'/, meeting:/APP_VERSION\s*=\s*'([^']+)'/};
+function fmtVer(v){v=String(v||'').trim();return v?(/^[vV]/.test(v)?'V'+v.slice(1):'V'+v):''}
+function loadVersions(){
+  APPS.forEach(function(a){
+    fetch(a.url,{cache:'no-cache'}).then(function(r){return r.ok?r.text():''}).then(function(txt){
+      var m=txt&&txt.match(VER_RE[a.id]); if(!m) return;
+      VERS[a.id]=fmtVer(m[1]); put('d3one:vers',JSON.stringify(VERS));
+      var el=document.querySelector('[data-ver="'+a.id+'"]'); if(el) el.textContent=VERS[a.id];
+    }).catch(function(){});
+  });
+}
 
 /* ---------- boot ---------- */
 (function(){
