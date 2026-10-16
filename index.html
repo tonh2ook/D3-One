@@ -59,6 +59,7 @@ svg.i{width:20px;height:20px;stroke:currentColor;fill:none;stroke-width:1.8;stro
 .pri:hover{filter:brightness(1.08)}
 .pri:disabled{opacity:.6}
 .note{font-size:12.5px;color:var(--muted);margin-top:12px;line-height:1.6}
+.lver{margin-top:14px;font:500 11px var(--latin);color:#9aa3b8;letter-spacing:.03em}
 .apps-mini{display:flex;justify-content:center;gap:8px;margin-top:18px}
 .apps-mini span{width:30px;height:30px;border-radius:9px;display:grid;place-items:center;color:#fff}
 
@@ -125,6 +126,7 @@ a.app:hover{transform:translateY(-3px);box-shadow:0 2px 4px rgba(20,30,60,.06),0
     <button class="pri" id="go" data-i="signIn"></button>
     <div class="note" data-i="loginNote"></div>
     <div class="apps-mini" id="mini"></div>
+    <div class="lver" id="lver"></div>
   </div>
 </section>
 
@@ -155,7 +157,7 @@ a.app:hover{transform:translateY(-3px);box-shadow:0 2px 4px rgba(20,30,60,.06),0
    D3-One — single sign-on launcher for the D3 team's PMU-B apps
    ทุกระบบอยู่ใต้โดเมน tonh2ook.github.io เดียวกัน จึงใช้ localStorage ร่วมกันได้
    ===================================================================== */
-var VERSION = 'D3-One V1.3.0';
+var VERSION = 'D3-One V1.3.1';
 // กลุ่มผู้ใช้ — รหัสของแต่ละกลุ่มใช้ปลดล็อก GitHub token ที่เข้ารหัสไว้ (ไม่มีรหัสหรือ token แบบข้อความธรรมดาในไฟล์)
 //   ผู้ชมทั่วไป (ผู้บริหาร/ทีมอื่นๆ) = pmub      → ผู้ทรงฯ + นามบัตร + ระบบ ผอ. (ดูอย่างเดียว)
 //   ฝ่ายเลขาฯ                     = secretary → ระบบ ผอ.
@@ -298,7 +300,7 @@ function loadVersions(){
 (function(){
   if(LOGO_SRC) $$('.logoSlot').forEach(function(e){e.innerHTML='<img alt="PMU-B" src="'+LOGO_SRC+'">'});
   $('#mini').innerHTML=APPS.map(function(a){return '<span style="background:'+a.c+'"><svg class="i" viewBox="0 0 24 24" style="width:16px;height:16px">'+a.icon+'</svg></span>'}).join('');
-  $('#ver').textContent=VERSION;
+  $('#ver').textContent=VERSION; $('#lver').textContent=VERSION;
   $('#go').onclick=login;
   $('#code').addEventListener('keydown',function(e){if(e.key==='Enter')login()});
   $('#out').onclick=signOut;
